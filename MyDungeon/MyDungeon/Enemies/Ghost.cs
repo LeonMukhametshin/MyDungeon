@@ -1,19 +1,15 @@
 ﻿using MyDungeon.Base;
+using MyDungeon.MyDungeon.Base.HealthComponents;
 
 namespace MyDungeon.Enemies
 {
     public class Ghost : Enemy
     {
-        //TODO: добавить конструкторы класса 
-        public Ghost()                     
-        {
-            Name = "Ghost";
-            HealthPoint = 70;
-            Armour = 40;
-            MobType = EnemyType.Ghost;
-        }
+        public Ghost(int healthPoint, string name = "NoName")
+            : base(healthPoint, name) { }
 
-        protected override int CalculateActualDamage(int damage) => (int) (damage* 0.4f);
+        public Ghost(Health health, string name = "NoName")
+            : base(health, name) { }
 
         protected override void Die() => Console.WriteLine($"{Name} повержен!");
 

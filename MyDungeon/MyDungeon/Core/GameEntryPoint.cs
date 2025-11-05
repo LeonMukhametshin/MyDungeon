@@ -1,12 +1,13 @@
-﻿using MyListLib;
+﻿using MyDungeon.Base;
 using MyDungeon.Enemies;
-using MyDungeon.Base;
+using MyDungeon.MyDungeon.Base.Armor;
+using MyDungeon.MyDungeon.Base.Armour;
+using MyDungeon.MyDungeon.Base.Dodge;
+using MyListLib;
 
 internal class GameEntryPoint
 {
-    private MyList<Enemy> _enemies = new MyList<Enemy>();
-    private Enemy _currentEnemy = null;
-    private Random _random = new Random();
+    private static MyList<Enemy> _enemies = new MyList<Enemy>();
 
     public void RunGame()
     {
@@ -15,15 +16,15 @@ internal class GameEntryPoint
         while (true)
         {
             PrintMenu();
-            string input = Console.ReadLine()?.Trim().ToLower();
+            string input = ReadInput();
 
             switch (input)
             {
-                case "1": CreateEnemy<Zombie>(); break;
-                case "2": CreateEnemy<Ghost>(); break;
-                case "3": DamageSelected(); break;
-                case "4": DamageRandom(); break;
-                case "5": DestroyCurrentEnemy(); break;
+                case "1": AddZombie() ; break;
+                case "2": TakeDamageToMonster(_enemies[0]); break;
+                case "3": UpgradeArmor(_enemies[0], ArmorValues.IRON); break;
+                case "4": UpgradeArmor(_enemies[0], ArmorValues.GOLDEN); break;
+                case "5": AddDodgeChance(_enemies[0], DodgeChances.LOW); break;
                 case "6": PrintAllEnemies(); break;
                 case "q": return;
                 default: Console.WriteLine("Неверный ввод!"); break;
@@ -33,97 +34,53 @@ internal class GameEntryPoint
         }
     }
 
+    private static void AddZombie() =>
+        _enemies.Add(new Zombie(150, "Zombie № " + _enemies.Count));
+
     private void PrintMenu()
     {
         Console.WriteLine("Меню (выберете один из вариантов)");
         Console.WriteLine("1) Создать зомби");
-        Console.WriteLine("2) Создать призрака");
-        Console.WriteLine("3) Нанести урон выбранному монстру");
-        Console.WriteLine("4) Нанести урон случайному монстру");
-        Console.WriteLine("5) Уничтожить выбранного монстра");
-        Console.WriteLine("6) Вывести данные о всех текущих монстрах");
+        Console.WriteLine("2) Нанести урон выбранному монстру");
+        Console.WriteLine("3) Улучшить первого монстра (выдать железную броню)");
+        Console.WriteLine("4) Улучшить первого монстра (выдать золотую броню)");
+        Console.WriteLine("5) Улучшить первого монстра (выдать шанс уворота)");
+        Console.WriteLine("6) Вывести данные о всех монстрах");
         Console.WriteLine("Введите \"q\" для выхода");
         Console.Write("Ваш выбор: ");
     }
 
-    private void CreateEnemy<T>() where T : Enemy, new()
+    private static void TakeDamageToMonster(Enemy enemy)
     {
-        T enemy = new T();
-        _enemies.Add(enemy);
-        _currentEnemy  = enemy;
-        Console.WriteLine($"Добавлен {enemy.Name}");
-    }
+        Console.Write("Enter damage: ");
+        var input = ReadInput();
 
-    private void DamageSelected()
-    {
-        if (_currentEnemy  == null)
+        if (int.TryParse(input, out var damage))
         {
-            Console.WriteLine("Нет выбранного монстра");
-            return;
+            var oldHp = enemy.HealthPoint;
+            enemy.TakeDamage(damage);
+            var newHp = enemy.HealthPoint;
+
+            Console.WriteLine($"{enemy.Name} took {damage}. Hp: {oldHp} -> {newHp}");
         }
-
-        Console.Write($"Введите урон для {_currentEnemy.Name}: ");
-        string input = Console.ReadLine();
-
-        if (!int.TryParse(input, out int damage) || damage <= 0)
+        else
         {
-            Console.WriteLine("Неверный формат");
-            return;
-        }
-
-        Console.WriteLine($"Наносим {damage} урона {_currentEnemy.Name}");
-        _currentEnemy.TakeDamage(damage);
-
-        if (!_currentEnemy .IsAlive)
-        {
-            RemoveEnemy(_currentEnemy );
+            Console.WriteLine($"Invalid damage {input}");
         }
     }
 
-    private void DamageRandom()
+    private static void UpgradeArmor(Enemy enemy, int armorValue)
     {
-        if (_enemies.Count == 0)
-        {
-            Console.WriteLine("Нет монстров для нанесения урона");
-            return;
-        }
-
-        int randomIndex = _random.Next(_enemies.Count);
-        var randomEnemy = _enemies[randomIndex];
-
-        //TODO избавиться от магических чисел
-        int damage = _random.Next(1, 10);
-
-        Console.WriteLine($"Наносим {damage} урона {randomEnemy.Name}");
-        randomEnemy.TakeDamage(damage);
-
-        if (!randomEnemy.IsAlive)
-        {
-            RemoveEnemyAt(randomIndex);
-        }
+        var currentHealth = enemy.HealthComponent;
+        enemy.HealthComponent = new ArmorHealth(currentHealth, armorValue);
+        Console.WriteLine($"Броня {armorValue} добавлена!");
     }
 
-    private void RemoveEnemy(Enemy enemy)
+    private static void AddDodgeChance(Enemy enemy, float dodgeChance)
     {
-        _enemies.Remove(enemy);
-
-        if (_currentEnemy  == enemy)
-        {
-            _currentEnemy  = _enemies.FirstOrDefault();
-        }
-    }
-
-    private void RemoveEnemyAt(int index) => RemoveEnemy(_enemies[index]);
-
-    private void DestroyCurrentEnemy()
-    {
-        if (_currentEnemy  == null)
-        {
-            Console.WriteLine("Нет выбранного монстра");
-            return;
-        }
-
-        RemoveEnemy(_currentEnemy);
+        var health = enemy.HealthComponent;
+        health = new DodgeChanceHealth(health, dodgeChance);
+        enemy.HealthComponent = health;
     }
 
     private void PrintAllEnemies()
@@ -135,11 +92,8 @@ internal class GameEntryPoint
         }
 
         Console.WriteLine($"Всего монстров: {_enemies.Count}");
-
-        foreach (var enemy in _enemies)
-        {
-            string selected = enemy == _currentEnemy ? "---> " : "";
-            Console.WriteLine($"{selected}{enemy}");
-        }
     }
+
+    private static string ReadInput() =>
+        Console.ReadLine()?.Trim().ToLower() ?? string.Empty;
 }

@@ -1,54 +1,53 @@
 ﻿using MyDungeon.Core.Interfaces;
+using MyDungeon.MyDungeon.Base.Armour;
+using MyDungeon.MyDungeon.Base.HealthComponents;
 
 namespace MyDungeon.Base
 {
-    public abstract class Enemy() : IMovable, IDamageable
+    public abstract class Enemy : IMovable, IDamageable
     {
-        #region Поля и свойства 
-        public int HealthPoint { get; protected set; }
+        public int HealthPoint => _health.Value;
         public string Name { get; protected set; } 
-        public int Armour { get; protected set; } 
-
         public EnemyType MobType { get; protected set; }
 
+        private Health _health;
+
+        public Health HealthComponent
+        {
+            get => _health;
+            set => _health = value ?? throw new ArgumentException(nameof(value));
+        }
+
         public bool IsAlive => HealthPoint > 0;
-        #endregion
+
+        protected Enemy(int healthpoint, string name = "NoName")
+            : this(new Health(healthpoint), name) { }
+
+        protected Enemy(Health health, string name = "NoName")
+        {
+            Name = name;
+            _health = health ?? throw new ArgumentNullException(nameof(health));
+        }
 
         private bool CanTakeDamage() => IsAlive;
 
         public void TakeDamage(int damage)
         {
-            if (!CanTakeDamage() || damage <= 0)
+            if(CanTakeDamage())
+            {
+                _health.TakeDamage(damage);
+                OnDamageApplied(damage);
+
+                if (!IsAlive)
+                {
+                    Die();
+                }
+            }
+            else
             {
                 OnDamagePrevented();
-                return;
-            }
-
-            int actualDamage = CalculateActualDamage(damage);
-            ApplyDamage(actualDamage);
-            OnDamageApplied(actualDamage);
-        }
-
-        private void ApplyDamage(int actualDamage)
-        {
-            HealthPoint -= actualDamage;
-
-            if (IsAlive)
-            {
-                HealthPoint = 0;
-                Die();
             }
         }
-
-        protected virtual int CalculateActualDamage(int damage)
-        {
-            //TODO: магические числа
-            float reductionPercent = Armour * 0.05f;
-            return (int)(damage * (1 - reductionPercent));
-        }
-
-        public override string ToString() =>
-             $"{Name} | HP: {HealthPoint}/100 | Armour: {Armour} | Status: {(IsAlive ? "Alive" : "Dead")}";
 
         protected abstract void Die();
 
@@ -57,6 +56,9 @@ namespace MyDungeon.Base
         protected virtual void OnDamagePrevented() { }
 
         public virtual void Move() { }
+
+        public override string ToString() =>
+             $"{Name} | HP: {HealthPoint}/100 | Status: {(IsAlive ? "Alive" : "Dead")}";
     }
 
     public enum EnemyType

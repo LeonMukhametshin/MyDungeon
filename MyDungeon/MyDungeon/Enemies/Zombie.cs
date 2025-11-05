@@ -1,19 +1,15 @@
 ﻿using MyDungeon.Base;
+using MyDungeon.MyDungeon.Base.HealthComponents;
 
 namespace MyDungeon.Enemies
 {
     public class Zombie : Enemy
     {
-        //TODO: добавить конструкторы класса 
-        public Zombie()
-        {
-            Name = "Zombie";
-            HealthPoint = 110; 
-            Armour = 12;        
-            MobType = EnemyType.Zombie;
-        }
+        public Zombie(int healthPoint, string name = "NoName")
+            : base(healthPoint, name) { }
 
-        protected override int CalculateActualDamage(int damage) => damage;
+        public Zombie(Health health, string name = "NoName")
+            : base(health, name) { }
 
         protected override void Die() => Console.WriteLine($"{Name} повержен");
        
