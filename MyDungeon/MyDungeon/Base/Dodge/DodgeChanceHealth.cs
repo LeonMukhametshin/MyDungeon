@@ -2,11 +2,8 @@
 
 namespace MyDungeon.MyDungeon.Base.Dodge
 {
-    public sealed class DodgeChanceHealth : HealthDecorator
+    public sealed class DodgeChanceHealth : HealthDodgeDecorator
     {
-        private readonly float _dodgeChanceValue;
-        private static readonly Random _random = new();
-
         public DodgeChanceHealth(Health decorator, float dodgeChanceValue) : base(decorator)
         {
             if (dodgeChanceValue < 0 || dodgeChanceValue > 1f)

@@ -2,10 +2,8 @@
 
 namespace MyDungeon.MyDungeon.Base.Armour
 {
-    public sealed class ArmorHealth : HealthDecorator
+    public sealed class ArmorHealth : HealthArmorDecorator
     {
-        protected readonly int _armorValue;
-
         public override bool HasArmor => true;
 
         public ArmorHealth(Health decorable, int armour) : base(decorable)

@@ -1,13 +1,14 @@
 ﻿namespace MyDungeon.MyDungeon.Base.HealthComponents
 {
-    public abstract class HealthDecorator : Health
+    public abstract class HealthDodgeDecorator : Health
     {
         protected readonly Health Decorable;
 
-        public override bool HasArmor => Decorable.HasArmor;
+        protected float _dodgeChanceValue;
+        protected static readonly Random _random = new();
 
-        protected HealthDecorator(Health decorable) 
-            : base(decorable.Value)
+        protected HealthDodgeDecorator(Health decorable)
+          : base(decorable.Value)
         {
             Decorable = decorable ?? throw new ArgumentNullException(nameof(decorable));
         }
